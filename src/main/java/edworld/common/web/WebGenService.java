@@ -10,7 +10,6 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URI;
-import java.net.URISyntaxException;
 import java.security.Principal;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -53,19 +52,15 @@ public class WebGenService extends Service {
 	@GET
 	@Path("")
 	public Response getHomePage() {
-		try {
-			return Response.temporaryRedirect(getHomePageURI(getCurrentPath())).build();
-		} catch (URISyntaxException e) {
-			throw new IllegalArgumentException(e);
-		}
+		return Response.temporaryRedirect(getHomePageURI(getCurrentPath())).build();
 	}
 
 	/**
 	 * Override this method to define a concrete URI to be used as the
 	 * application's homepage.
 	 */
-	protected URI getHomePageURI(String prefix) throws URISyntaxException {
-		return new URI(prefix + "index.html");
+	protected URI getHomePageURI(String prefix) {
+		return getURI(prefix + "index.html");
 	}
 
 	@GET
@@ -237,7 +232,7 @@ public class WebGenService extends Service {
 						html.substring(0, matcher.start(1))
 								+ html.substring(matcher.end(1), matcher.start(2)) + matcher.group(2)
 										.replace(matcher.group(1).trim(), matcher.group(1).trim() + " selected")
-								+ html.substring(matcher.end(2)));
+						+ html.substring(matcher.end(2)));
 		return html;
 	}
 

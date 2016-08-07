@@ -9,6 +9,7 @@ import java.io.IOException;
 import java.io.PrintStream;
 import java.math.BigDecimal;
 import java.net.URI;
+import java.net.URISyntaxException;
 import java.security.Principal;
 import java.util.ArrayList;
 import java.util.Calendar;
@@ -37,8 +38,9 @@ import edworld.common.web.infra.UserInfo;
 import edworld.common.web.infra.WebUtil;
 
 public abstract class Service {
+	public static final String PATH_EXIBIR = "exibir.html";
 	public static final String PATH_EXCLUIR = "excluir";
-	// @Produces requires static constant values.
+	// @Produces requires static constant values for the format options.
 	public static final String CHARSET_CONFIG = "; charset=UTF-8";
 	public static final String JSON = MediaType.APPLICATION_JSON + CHARSET_CONFIG;
 	public static final String XML = MediaType.APPLICATION_XML + CHARSET_CONFIG;
@@ -293,5 +295,24 @@ public abstract class Service {
 		} catch (IOException e) {
 			throw new IllegalArgumentException(e);
 		}
+	}
+
+	public static URI getURI(String uri, String... queryParameters) {
+		try {
+			String query = "";
+			String prefix = "?";
+			for (String parameter : queryParameters) {
+				String[] parts = parameter.split("=", 2);
+				query += prefix + parts[0] + "=" + HTMLUtil.encodeURLParam(parts[1]);
+				prefix = "&";
+			}
+			return new URI(uri + query);
+		} catch (URISyntaxException e) {
+			throw new IllegalArgumentException(e);
+		}
+	}
+
+	protected URI getURIExibir(String prefixo) {
+		return getURI(getCurrentPath() + prefixo + PATH_EXIBIR);
 	}
 }
