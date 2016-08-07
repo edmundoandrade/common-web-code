@@ -47,7 +47,7 @@ public class WebGenService extends Service {
 	private static final Pattern REGEX_SELECTED_OPTION = regexHTML(
 			"(?is)<select...(\\s+value=\"___\")...>(.+?)</select>");
 	private static final Pattern REGEX_CHECKED_INPUT = regexHTML(
-			"(?is)<input...type=\"checkbox\"...(\\s+value=\"[SN]___\")...>");
+			"(?is)<input...type=\"checkbox\"...(\\s+value=\"(S___|N___|)\")...>");
 
 	@GET
 	@Path("")
@@ -232,7 +232,7 @@ public class WebGenService extends Service {
 						html.substring(0, matcher.start(1))
 								+ html.substring(matcher.end(1), matcher.start(2)) + matcher.group(2)
 										.replace(matcher.group(1).trim(), matcher.group(1).trim() + " selected")
-						+ html.substring(matcher.end(2)));
+								+ html.substring(matcher.end(2)));
 		return html;
 	}
 

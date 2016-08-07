@@ -38,8 +38,6 @@ import edworld.common.web.infra.UserInfo;
 import edworld.common.web.infra.WebUtil;
 
 public abstract class Service {
-	public static final String PATH_EXIBIR = "exibir.html";
-	public static final String PATH_EXCLUIR = "excluir";
 	// @Produces requires static constant values for the format options.
 	public static final String CHARSET_CONFIG = "; charset=UTF-8";
 	public static final String JSON = MediaType.APPLICATION_JSON + CHARSET_CONFIG;
@@ -53,6 +51,7 @@ public abstract class Service {
 	protected static final String APPLICATION_OCTET_STREAM = MediaType.APPLICATION_OCTET_STREAM;
 	protected static final String LINK_HISTORY_BACK = "<p><a href=\"javascript:window.history.back()\">Voltar</a></p>";
 	private static final Pattern WEB_PATH_DELIMITER = Pattern.compile("/");
+	private static String viewPath = "view.html";
 	@PersistenceContext(unitName = "main")
 	protected EntityManager entityManager;
 	@Context
@@ -61,6 +60,53 @@ public abstract class Service {
 	private ServletContext servletContext;
 	private PersistenceManager persistenceManager;
 	private Principal userPrincipal;
+
+	public static String getViewPath() {
+		return viewPath;
+	}
+
+	public static void setViewPath(String newViewPath) {
+		viewPath = newViewPath;
+	}
+
+	public static URI getURIView(String prefixo) {
+		return getURI(prefixo + viewPath);
+	}
+
+	public static URI getURI(String uri, String... queryParameters) {
+		try {
+			String query = "";
+			String prefix = "?";
+			for (String parameter : queryParameters) {
+				String[] parts = parameter.split("=", 2);
+				query += prefix + parts[0] + "=" + HTMLUtil.encodeURLParam(parts[1]);
+				prefix = "&";
+			}
+			return new URI(uri + query);
+		} catch (URISyntaxException e) {
+			throw new IllegalArgumentException(e);
+		}
+	}
+
+	public static String resultPage(String result, String rootPath) {
+		String titulo = "Página de resultado";
+		ByteArrayOutputStream byteStream = new ByteArrayOutputStream();
+		try {
+			String template = IOUtils.toString(Service.class.getResource("/templates/web-page.html"),
+					Config.getEncoding());
+			PrintStream out = new PrintStream(byteStream, false, Config.getEncoding());
+			HTMLUtil.openHTML(template, rootPath, out, titulo);
+			out.println("<ol class=\"breadcrumb\">");
+			out.println("<li class=\"active\">" + titulo + "</li>");
+			out.println("</ol>");
+			out.print(result);
+			HTMLUtil.closeHTML(template, out);
+			out.close();
+			return byteStream.toString(Config.getEncoding());
+		} catch (IOException e) {
+			throw new IllegalArgumentException(e);
+		}
+	}
 
 	protected HttpServletRequest getRequest() {
 		return request;
@@ -258,7 +304,7 @@ public abstract class Service {
 		return html;
 	}
 
-	public static String getRootPath(String pathInfo, String servletPath) {
+	protected String getRootPath(String pathInfo, String servletPath) {
 		String absolutePath = servletPath;
 		if (pathInfo != null)
 			absolutePath += pathInfo;
@@ -269,50 +315,11 @@ public abstract class Service {
 		return relativePath;
 	}
 
-	public static String getCurrentPath(String requestURI) {
+	protected String getCurrentPath(String requestURI) {
 		if (requestURI.endsWith("/"))
 			return "";
 		String[] parts = requestURI.split("/");
 		String result = parts[parts.length - 1];
-		return result.isEmpty() || result.equals(PATH_EXCLUIR) ? "" : result + "/";
-	}
-
-	public static String resultPage(String result, String rootPath) {
-		String titulo = "Página de resultado";
-		ByteArrayOutputStream byteStream = new ByteArrayOutputStream();
-		try {
-			String template = IOUtils.toString(Service.class.getResource("/templates/web-page.html"),
-					Config.getEncoding());
-			PrintStream out = new PrintStream(byteStream, false, Config.getEncoding());
-			HTMLUtil.openHTML(template, rootPath, out, titulo);
-			out.println("<ol class=\"breadcrumb\">");
-			out.println("<li class=\"active\">" + titulo + "</li>");
-			out.println("</ol>");
-			out.print(result);
-			HTMLUtil.closeHTML(template, out);
-			out.close();
-			return byteStream.toString(Config.getEncoding());
-		} catch (IOException e) {
-			throw new IllegalArgumentException(e);
-		}
-	}
-
-	public static URI getURI(String uri, String... queryParameters) {
-		try {
-			String query = "";
-			String prefix = "?";
-			for (String parameter : queryParameters) {
-				String[] parts = parameter.split("=", 2);
-				query += prefix + parts[0] + "=" + HTMLUtil.encodeURLParam(parts[1]);
-				prefix = "&";
-			}
-			return new URI(uri + query);
-		} catch (URISyntaxException e) {
-			throw new IllegalArgumentException(e);
-		}
-	}
-
-	protected URI getURIExibir(String prefixo) {
-		return getURI(getCurrentPath() + prefixo + PATH_EXIBIR);
+		return result.isEmpty() ? "" : result + "/";
 	}
 }
