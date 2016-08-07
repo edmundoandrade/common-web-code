@@ -1,0 +1,18 @@
+<div class="${grid}">
+	<label for="${id}">${title}</label>
+	<input type="file" class="form-control" id="${id}" name="${id}">
+<script>
+$('#${id}').change(function() {
+  var filename = $(this).val();
+  var lastIndex = filename.lastIndexOf("\\");
+  if (lastIndex >= 0) {
+    filename = filename.substring(lastIndex + 1);
+  }
+  $('#nome_${id}').val(filename);
+});
+</script>
+</div>
+<div class="${grid}">
+	<label for="nome_${id}">${title}</label>
+	<input type="text" class="form-control" id="nome_${id}" name="nome_${id}" value="[[nome_${id}]]">
+</div>
