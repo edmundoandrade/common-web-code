@@ -54,7 +54,13 @@
 			<groupId>org.jboss.resteasy</groupId>
 			<artifactId>resteasy-jaxrs</artifactId>
 			<version>3.0.14.Final</version>
-			<scope>provided</scope><!-- Componente padrão do servidor JBoss -->
+			<scope>provided</scope><!-- Standard component of Wildfly web server -->
+		</dependency>
+		<dependency>
+			<groupId>org.jboss.resteasy</groupId>
+			<artifactId>resteasy-multipart-provider</artifactId>
+			<version>3.0.14.Final</version>
+			<scope>provided</scope><!-- Standard component of Wildfly web server -->
 		</dependency>
 		<dependency>
 			<groupId>commons-beanutils</groupId>

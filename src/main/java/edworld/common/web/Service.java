@@ -38,7 +38,7 @@ import edworld.common.web.infra.WebUtil;
 
 public abstract class Service {
 	public static final String PATH_EXCLUIR = "excluir";
-	public static final String CHARSET_CONFIG = "; charset=UTF-8";
+	public static final String CHARSET_CONFIG = "; charset=" + Config.getEncoding();
 	public static final String JSON = MediaType.APPLICATION_JSON + CHARSET_CONFIG;
 	public static final String XML = MediaType.APPLICATION_XML + CHARSET_CONFIG;
 	public static final String CSV = "text/csv" + CHARSET_CONFIG;
