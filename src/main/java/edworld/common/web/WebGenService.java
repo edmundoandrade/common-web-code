@@ -127,6 +127,7 @@ public class WebGenService extends Service {
 		if (specification == null)
 			return null;
 		WebInterface dynInterface = new WebInterface(specification, null, LANGUAGE, templatesDir, data);
+		dynInterface.setTemplateClassLoader(WebGenService.class.getClassLoader());
 		dynInterface.generateArtifacts();
 		return dynInterface.getArtifacts().get(0);
 	}
@@ -232,7 +233,7 @@ public class WebGenService extends Service {
 						html.substring(0, matcher.start(1))
 								+ html.substring(matcher.end(1), matcher.start(2)) + matcher.group(2)
 										.replace(matcher.group(1).trim(), matcher.group(1).trim() + " selected")
-								+ html.substring(matcher.end(2)));
+						+ html.substring(matcher.end(2)));
 		return html;
 	}
 
