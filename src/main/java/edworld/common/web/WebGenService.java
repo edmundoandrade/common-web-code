@@ -31,22 +31,21 @@ import org.apache.commons.io.IOUtils;
 import edworld.common.core.Link;
 import edworld.common.core.entity.EntidadeVersionada;
 import edworld.common.infra.Config;
-import edworld.common.infra.repo.PersistenceManager;
 import edworld.common.infra.util.HTMLUtil;
 import edworld.webgen.WebArtifact;
 import edworld.webgen.WebInterface;
 
 public class WebGenService extends Service {
-	private static String MENU_ROLE = "Menu";
+	public static String MENU_ROLE = "Menu";
 	public static final String CHARSET_CONFIG = "; charset=UTF-8";
 	public static final String HTML = MediaType.TEXT_HTML + CHARSET_CONFIG;
-	private static final String DISPLAY_HTML = "___HTML";
-	private static final String ITEM_SEPARATOR = "──────────";
-	private static final String HTML_OPTION_SEPARATOR = "<option disabled>" + ITEM_SEPARATOR + "</option>";
-	private static final String LANGUAGE = "pt";
-	private static final Pattern REGEX_SELECTED_OPTION = regexHTML(
+	public static final String DISPLAY_HTML = "___HTML";
+	public static final String ITEM_SEPARATOR = "──────────";
+	public static final String HTML_OPTION_SEPARATOR = "<option disabled>" + ITEM_SEPARATOR + "</option>";
+	public static final String LANGUAGE = "pt";
+	protected static final Pattern REGEX_SELECTED_OPTION = regexHTML(
 			"(?is)<select...(\\s+value=\"___\")...>(.+?)</select>");
-	private static final Pattern REGEX_CHECKED_INPUT = regexHTML(
+	protected static final Pattern REGEX_CHECKED_INPUT = regexHTML(
 			"(?is)<input...type=\"checkbox\"...(\\s+value=\"(S___|N___|)\")...>");
 
 	@GET
@@ -67,8 +66,7 @@ public class WebGenService extends Service {
 	@Path("/{resource}")
 	public Response getResource(@PathParam("resource") String resource) {
 		if (resource.endsWith(".html"))
-			return getPage(resource.replace(".html", ""), getUserPrincipal(), null, "", getPersistenceManager(),
-					getRequest(), getTemplatesDir(), null);
+			return getPage(resource.replace(".html", ""), null, "", null);
 		byte[] result = getWebResource(resource);
 		if (result == null)
 			return Response.status(Response.Status.NOT_FOUND).build();
@@ -97,42 +95,53 @@ public class WebGenService extends Service {
 	public Response getProtectedPage(@PathParam("page") String page) {
 		if (!isInRole(MENU_ROLE))
 			return unauthorizedAccess();
-		return getPage(page, getUserPrincipal(), null, "../", getPersistenceManager(), getRequest(), getTemplatesDir(),
-				null);
+		return getPage(page, null, "../", null);
 	}
 
-	public static Response getPage(String page, Principal principal, Object entity, String rootPath,
-			PersistenceManager persistenceManager, HttpServletRequest request, File templatesDir,
-			Map<String, String> fields, String... xmlData) {
-		WebArtifact webArtifact = getWebArtifact(page, principal, entity, persistenceManager, request, templatesDir,
-				xmlData);
+	protected Response getPage(String page, Object entity, String rootPath, Map<String, String> fields,
+			String... xmlData) {
+		WebArtifact webArtifact = getWebArtifact(page, getTemplatesDir(), xmlData);
 		if (webArtifact == null)
 			return Response.status(Response.Status.NOT_FOUND)
 					.entity(resultPage("Modelo da página \"" + page + "\" não localizado.", rootPath)).type(HTML)
 					.build();
-		return Response.ok(content(webArtifact, entity, rootPath, request, principal, persistenceManager, fields))
-				.type(HTML).encoding(Config.getEncoding()).build();
+		foundWebArtifact(webArtifact, page);
+		return Response.ok(content(webArtifact, entity, rootPath, request, getUserPrincipal(), fields)).type(HTML)
+				.encoding(Config.getEncoding()).build();
 	}
 
-	private static WebArtifact getWebArtifact(String page, Principal principal, Object entity,
-			PersistenceManager persistenceManager, HttpServletRequest request, File templatesDir, String... xmlData) {
+	/**
+	 * Override this method to check or change content of each WebArtifact found
+	 * by <code>getPage</code> method.
+	 */
+	protected void foundWebArtifact(WebArtifact webArtifact, String page) {
+	}
+
+	protected WebArtifact getWebArtifact(String page, File templatesDir, String... xmlData) {
 		List<String> dataList = new ArrayList<>();
 		for (String data : xmlData)
 			dataList.add(data);
 		return createWebArtifact(page, templatesDir, getData(dataList));
 	}
 
-	public static WebArtifact createWebArtifact(String page, File templatesDir, String data) {
+	protected WebArtifact createWebArtifact(String page, File templatesDir, String data) {
 		String specification = text("/specifications/" + page + ".wiki");
 		if (specification == null)
 			return null;
-		WebInterface dynInterface = new WebInterface(specification, null, LANGUAGE, templatesDir, data);
+		WebInterface dynInterface = new WebInterface(specification, getDataDictionary(), LANGUAGE, templatesDir, data);
 		dynInterface.setTemplateClassLoader(WebGenService.class.getClassLoader());
 		dynInterface.generateArtifacts();
 		return dynInterface.getArtifacts().get(0);
 	}
 
-	private static String getData(List<String> listaDados) {
+	/**
+	 * Override this method to define a WebGen data dictionary.
+	 */
+	protected String getDataDictionary() {
+		return null;
+	}
+
+	private String getData(List<String> listaDados) {
 		String dados = "<dados><default>";
 		for (String item : listaDados)
 			dados += item;
@@ -140,7 +149,7 @@ public class WebGenService extends Service {
 		return dados;
 	}
 
-	private static String text(String path) {
+	protected String text(String path) {
 		InputStream stream = WebGenService.class.getResourceAsStream(path);
 		if (stream == null)
 			return null;
@@ -151,21 +160,19 @@ public class WebGenService extends Service {
 		}
 	}
 
-	private static String content(WebArtifact webArtifact, Object entity, String rootPath, HttpServletRequest request,
-			Principal principal, PersistenceManager persistenceManager, Map<String, String> fields) {
-		Map<String, String> parameters = prepareParameters(request, principal, persistenceManager);
+	protected String content(WebArtifact webArtifact, Object entity, String rootPath, HttpServletRequest request,
+			Principal principal, Map<String, String> fields) {
+		Map<String, String> parameters = prepareParameters(request);
 		String html = HTMLUtil.fillRootPath(webArtifact.getContent(), rootPath);
 		html = html.replace("${login}", principal.getName());
 		for (String field : listarOcorrencias(regexHTML("\\[\\[(.*?(\\[\\d+\\])?)\\]\\]"), html))
-			html = html.replace("[[" + field + "]]",
-					entityAttribute(entity, field, parameters, principal, persistenceManager, fields));
+			html = html.replace("[[" + field + "]]", entityAttribute(entity, field, parameters, fields));
 		html = solveOptionSeparator(html);
 		html = solveSelectedOption(html);
 		return solveCheckedInput(html);
 	}
 
-	private static Map<String, String> prepareParameters(HttpServletRequest request, Principal principal,
-			PersistenceManager persistenceManager) {
+	protected Map<String, String> prepareParameters(HttpServletRequest request) {
 		Map<String, String> result = new HashMap<>();
 		for (Object parameter : request.getParameterMap().keySet()) {
 			String field = (String) parameter;
@@ -175,8 +182,8 @@ public class WebGenService extends Service {
 		return result;
 	}
 
-	private static String entityAttribute(Object entity, String field, Map<String, String> parameters,
-			Principal principal, PersistenceManager persistenceManager, Map<String, String> fields) {
+	protected String entityAttribute(Object entity, String field, Map<String, String> parameters,
+			Map<String, String> fields) {
 		if (fields != null && fields.containsKey(field))
 			return fields.get(field);
 		String result = "";
@@ -204,7 +211,7 @@ public class WebGenService extends Service {
 		return escapeMarkup ? escapeHTML(result) : result;
 	}
 
-	private static String solveField(String field) {
+	public String solveField(String field) {
 		if (field.equals("n") || field.startsWith("n_"))
 			return "id";
 		if (field.startsWith("tipo_"))
@@ -221,11 +228,11 @@ public class WebGenService extends Service {
 		return solvedField;
 	}
 
-	private static String solveOptionSeparator(String html) {
+	public String solveOptionSeparator(String html) {
 		return html.replace(elementoXML("option", ITEM_SEPARATOR), HTML_OPTION_SEPARATOR);
 	}
 
-	public static String solveSelectedOption(String html) {
+	public String solveSelectedOption(String html) {
 		Matcher matcher = REGEX_SELECTED_OPTION.matcher(html);
 		while (matcher.find())
 			if (matcher.group(2).contains(matcher.group(1).trim()))
@@ -233,11 +240,11 @@ public class WebGenService extends Service {
 						html.substring(0, matcher.start(1))
 								+ html.substring(matcher.end(1), matcher.start(2)) + matcher.group(2)
 										.replace(matcher.group(1).trim(), matcher.group(1).trim() + " selected")
-						+ html.substring(matcher.end(2)));
+								+ html.substring(matcher.end(2)));
 		return html;
 	}
 
-	public static String solveCheckedInput(String html) {
+	public String solveCheckedInput(String html) {
 		Matcher matcher = REGEX_CHECKED_INPUT.matcher(html);
 		while (matcher.find()) {
 			String checkedMarker = matcher.group(1).contains("Sim") ? " checked" : "";
