@@ -9,7 +9,6 @@ import static edworld.common.infra.util.TextUtil.formatar;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
-import java.net.URI;
 import java.security.Principal;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -19,9 +18,6 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import javax.servlet.http.HttpServletRequest;
-import javax.ws.rs.GET;
-import javax.ws.rs.Path;
-import javax.ws.rs.PathParam;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
@@ -36,7 +32,6 @@ import edworld.webgen.WebArtifact;
 import edworld.webgen.WebInterface;
 
 public class WebGenService extends Service {
-	public static String MENU_ROLE = "Menu";
 	public static final String CHARSET_CONFIG = "; charset=UTF-8";
 	public static final String HTML = MediaType.TEXT_HTML + CHARSET_CONFIG;
 	public static final String DISPLAY_HTML = "___HTML";
@@ -48,66 +43,12 @@ public class WebGenService extends Service {
 	protected static final Pattern REGEX_CHECKED_INPUT = regexHTML(
 			"(?is)<input...type=\"checkbox\"...(\\s+value=\"(S___|N___|)\")...>");
 
-	@GET
-	@Path("")
-	public Response getHomePage() {
-		return Response.temporaryRedirect(getHomePageURI(getCurrentPath())).build();
-	}
-
-	/**
-	 * Override this method to define a concrete URI to be used as the
-	 * application's homepage.
-	 */
-	protected URI getHomePageURI(String prefix) {
-		return getURI(prefix + "index.html");
-	}
-
-	@GET
-	@Path("/{resource}")
-	public Response getResource(@PathParam("resource") String resource) {
-		if (resource.endsWith(".html"))
-			return getPage(resource.replace(".html", ""), null, "", null);
-		byte[] result = getWebResource(resource);
-		if (result == null)
-			return Response.status(Response.Status.NOT_FOUND).build();
-		return Response.ok(result, "image/png").build();
-	}
-
 	/**
 	 * Override this method to define a directory for alternative WEB component
 	 * templates.
 	 */
 	protected File getTemplatesDir() {
 		return null;
-	}
-
-	@GET
-	@Path("/css/{resource}")
-	public Response getStyleResource(@PathParam("resource") String resource) {
-		byte[] result = getWebResource("css/" + resource);
-		if (result == null)
-			return Response.status(Response.Status.NOT_FOUND).build();
-		return Response.ok(result, "text/css").build();
-	}
-
-	@GET
-	@Path("/auth/{page}.html")
-	public Response getProtectedPage(@PathParam("page") String page) {
-		if (!isInRole(MENU_ROLE))
-			return unauthorizedAccess();
-		return getPage(page, null, "../", null);
-	}
-
-	protected Response getPage(String page, Object entity, String rootPath, Map<String, String> fields,
-			String... xmlData) {
-		WebArtifact webArtifact = getWebArtifact(page, getTemplatesDir(), xmlData);
-		if (webArtifact == null)
-			return Response.status(Response.Status.NOT_FOUND)
-					.entity(resultPage("Modelo da página \"" + page + "\" não localizado.", rootPath)).type(HTML)
-					.build();
-		foundWebArtifact(webArtifact, page);
-		return Response.ok(content(webArtifact, entity, rootPath, request, getUserPrincipal(), fields)).type(HTML)
-				.encoding(Config.getEncoding()).build();
 	}
 
 	/**
@@ -117,23 +58,6 @@ public class WebGenService extends Service {
 	protected void foundWebArtifact(WebArtifact webArtifact, String page) {
 	}
 
-	protected WebArtifact getWebArtifact(String page, File templatesDir, String... xmlData) {
-		List<String> dataList = new ArrayList<>();
-		for (String data : xmlData)
-			dataList.add(data);
-		return createWebArtifact(page, templatesDir, getData(dataList));
-	}
-
-	protected WebArtifact createWebArtifact(String page, File templatesDir, String data) {
-		String specification = text("/specifications/" + page + ".wiki");
-		if (specification == null)
-			return null;
-		WebInterface dynInterface = new WebInterface(specification, getDataDictionary(), LANGUAGE, templatesDir, data);
-		dynInterface.setTemplateClassLoader(WebGenService.class.getClassLoader());
-		dynInterface.generateArtifacts();
-		return dynInterface.getArtifacts().get(0);
-	}
-
 	/**
 	 * Override this method to define a WebGen data dictionary.
 	 */
@@ -141,7 +65,44 @@ public class WebGenService extends Service {
 		return null;
 	}
 
-	private String getData(List<String> listaDados) {
+	public Response getStaticResource(String resourceName, String resourceType) {
+		byte[] result = getWebResource(resourceName);
+		if (result == null)
+			return Response.status(Response.Status.NOT_FOUND).build();
+		return Response.ok(result, resourceType).build();
+	}
+
+	protected Response getPage(String page, Object entity, String rootPath, Map<String, String> fields,
+			String... xmlData) {
+		WebArtifact webArtifact = getWebArtifact(page, entity, xmlData);
+		if (webArtifact == null)
+			return Response.status(Response.Status.NOT_FOUND)
+					.entity(resultPage("Modelo da página \"" + page + "\" não localizado.", rootPath)).type(HTML)
+					.build();
+		foundWebArtifact(webArtifact, page);
+		return Response.ok(content(webArtifact, entity, rootPath, request, getUserPrincipal(), fields)).type(HTML)
+				.encoding(Config.getEncoding()).build();
+	}
+
+	protected WebArtifact getWebArtifact(String page, Object entity, String... xmlData) {
+		List<String> dataList = new ArrayList<>();
+		for (String data : xmlData)
+			dataList.add(data);
+		return createWebArtifact(page, getData(dataList));
+	}
+
+	protected WebArtifact createWebArtifact(String page, String data) {
+		String specification = text("/specifications/" + page + ".wiki");
+		if (specification == null)
+			return null;
+		WebInterface dynInterface = new WebInterface(specification, getDataDictionary(), LANGUAGE, getTemplatesDir(),
+				data);
+		dynInterface.setTemplateClassLoader(WebGenService.class.getClassLoader());
+		dynInterface.generateArtifacts();
+		return dynInterface.getArtifacts().get(0);
+	}
+
+	protected String getData(List<String> listaDados) {
 		String dados = "<dados><default>";
 		for (String item : listaDados)
 			dados += item;

@@ -22,6 +22,7 @@ import javax.persistence.PersistenceContext;
 import javax.servlet.ServletContext;
 import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.core.Context;
+import javax.ws.rs.core.GenericEntity;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.ResponseBuilder;
@@ -47,11 +48,12 @@ public abstract class Service {
 			+ CHARSET_CONFIG;
 	public static final String HTML = MediaType.TEXT_HTML + CHARSET_CONFIG;
 	public static final String PLAIN = MediaType.TEXT_PLAIN + CHARSET_CONFIG;
+	public static final String CSS = "text/css" + CHARSET_CONFIG;
+	public static final String IMAGE = "image/*";
 	protected static final String MULTIPART_FORM_DATA = MediaType.MULTIPART_FORM_DATA;
 	protected static final String APPLICATION_OCTET_STREAM = MediaType.APPLICATION_OCTET_STREAM;
 	protected static final String LINK_HISTORY_BACK = "<p><a href=\"javascript:window.history.back()\">Voltar</a></p>";
-	private static final Pattern WEB_PATH_DELIMITER = Pattern.compile("/");
-	private static String viewPath = "view.html";
+	protected static final Pattern WEB_PATH_DELIMITER = Pattern.compile("/");
 	@PersistenceContext(unitName = "main")
 	protected EntityManager entityManager;
 	@Context
@@ -60,18 +62,6 @@ public abstract class Service {
 	private ServletContext servletContext;
 	private PersistenceManager persistenceManager;
 	private Principal userPrincipal;
-
-	public static String getViewPath() {
-		return viewPath;
-	}
-
-	public static void setViewPath(String newViewPath) {
-		viewPath = newViewPath;
-	}
-
-	public static URI getURIView(String prefixo) {
-		return getURI(prefixo + viewPath);
-	}
 
 	public static URI getURI(String uri, String... queryParameters) {
 		try {
@@ -88,7 +78,37 @@ public abstract class Service {
 		}
 	}
 
-	public static String resultPage(String result, String rootPath) {
+	/**
+	 * Override this method to change the standard name for view pages.
+	 * 
+	 * @param prefix
+	 */
+	protected URI getURIView(String prefix) {
+		return getURI(prefix + "view.html");
+	}
+
+	/**
+	 * Override this method to insert an operation record into the application's
+	 * audit trail.
+	 * 
+	 * @param operation
+	 * @param userInfo
+	 */
+	protected void auditOperation(String operation, UserInfo userInfo) {
+	}
+
+	/**
+	 * Override this method to define a default value returned by
+	 * {@link #getUserPrincipal()} when no user has been authenticated.
+	 * 
+	 * @return value to be returned by {@link #getUserPrincipal()} when no user
+	 *         has been authenticated.
+	 */
+	protected Principal getDefaultUserPrincipal() {
+		return null;
+	}
+
+	protected String resultPage(String result, String rootPath) {
 		String titulo = "Página de resultado";
 		ByteArrayOutputStream byteStream = new ByteArrayOutputStream();
 		try {
@@ -129,16 +149,6 @@ public abstract class Service {
 			WebUtil.setSessionAttribute("PendingLogin", null, request);
 		}
 		return getUserInfo() != null && getUserInfo().isInRole(role);
-	}
-
-	/**
-	 * Override this method to insert an operation record into the application's
-	 * audit trail.
-	 * 
-	 * @param operation
-	 * @param userInfo
-	 */
-	protected void auditOperation(String operation, UserInfo userInfo) {
 	}
 
 	protected String getParameter(String name) {
@@ -198,17 +208,6 @@ public abstract class Service {
 		return userPrincipal;
 	}
 
-	/**
-	 * Override this method to define a default value returned by
-	 * {@link #getUserPrincipal()} when no user has been authenticated.
-	 * 
-	 * @return value to be returned by {@link #getUserPrincipal()} when no user
-	 *         has been authenticated.
-	 */
-	protected Principal getDefaultUserPrincipal() {
-		return null;
-	}
-
 	protected Response validationErrors(List<String> messages) {
 		String html = "<html>";
 		html += "<ul>";
@@ -234,6 +233,11 @@ public abstract class Service {
 			builder.header("Content-Disposition", "attachment; filename=" + fileName + "." + format);
 		}
 		return builder.build();
+	}
+
+	protected <T> Response responseList(List<T> list, String format, String fileName) {
+		return response(new GenericEntity<List<T>>(list) {
+		}, format, fileName);
 	}
 
 	public Response unauthorizedAccess() {

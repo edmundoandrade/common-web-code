@@ -15,9 +15,6 @@ import edworld.common.infra.Config;
 
 public class PostRequestFilter implements Filter {
 	public void init(FilterConfig filterConfig) throws ServletException {
-		String viewPath = filterConfig.getInitParameter("view-path");
-		if (viewPath != null)
-			Service.setViewPath(viewPath);
 	}
 
 	public void doFilter(ServletRequest request, ServletResponse response, FilterChain chain)
