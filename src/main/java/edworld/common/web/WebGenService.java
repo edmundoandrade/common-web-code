@@ -6,7 +6,6 @@ import static edworld.common.infra.util.RegexUtil.listarOcorrencias;
 import static edworld.common.infra.util.RegexUtil.regexHTML;
 import static edworld.common.infra.util.TextUtil.formatar;
 
-import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.security.Principal;
@@ -30,6 +29,7 @@ import edworld.common.infra.Config;
 import edworld.common.infra.util.HTMLUtil;
 import edworld.webgen.WebArtifact;
 import edworld.webgen.WebInterface;
+import edworld.webgen.WebTemplateFinder;
 
 public class WebGenService extends Service {
 	public static final String CHARSET_CONFIG = "; charset=UTF-8";
@@ -44,11 +44,16 @@ public class WebGenService extends Service {
 			"(?is)<input...type=\"checkbox\"...(\\s+value=\"(S___|N___|)\")...>");
 
 	/**
-	 * Override this method to define a directory for alternative WEB component
-	 * templates.
+	 * Override this method to define a custom finder for alternative WEB
+	 * component templates.
 	 */
-	protected File getTemplatesDir() {
-		return null;
+	protected WebTemplateFinder getTemplateFinder() {
+		return new WebTemplateFinder(null) {
+			@Override
+			protected InputStream streamFromResourceName(String resourceName) {
+				return WebGenService.class.getResourceAsStream(resourceName);
+			}
+		};
 	}
 
 	/**
@@ -95,9 +100,8 @@ public class WebGenService extends Service {
 		String specification = text("/specifications/" + page + ".wiki");
 		if (specification == null)
 			return null;
-		WebInterface dynInterface = new WebInterface(specification, getDataDictionary(), LANGUAGE, getTemplatesDir(),
+		WebInterface dynInterface = new WebInterface(specification, getDataDictionary(), LANGUAGE, getTemplateFinder(),
 				data);
-		dynInterface.setTemplateClassLoader(WebGenService.class.getClassLoader());
 		dynInterface.generateArtifacts();
 		return dynInterface.getArtifacts().get(0);
 	}
