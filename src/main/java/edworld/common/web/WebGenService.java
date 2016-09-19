@@ -4,6 +4,7 @@ import static edworld.common.infra.RecursoXML.elementoXML;
 import static edworld.common.infra.util.HTMLUtil.escapeHTML;
 import static edworld.common.infra.util.RegexUtil.listarOcorrencias;
 import static edworld.common.infra.util.RegexUtil.regexHTML;
+import static edworld.common.infra.util.TextUtil.LINE_BREAK;
 import static edworld.common.infra.util.TextUtil.formatar;
 
 import java.io.IOException;
@@ -135,6 +136,15 @@ public class WebGenService extends Service {
 		html = solveOptionSeparator(html);
 		html = solveSelectedOption(html);
 		return solveCheckedInput(html);
+	}
+
+	protected String addLinesBeforeMarker(String marker, String content, String... lines) {
+		String result = content;
+		for (String line : lines) {
+			int pos = result.indexOf(marker);
+			result = result.substring(0, pos) + line + LINE_BREAK + result.substring(pos);
+		}
+		return result;
 	}
 
 	protected Map<String, String> prepareParameters(HttpServletRequest request) {
