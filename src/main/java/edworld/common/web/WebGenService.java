@@ -43,6 +43,7 @@ public class WebGenService extends Service {
 			"(?is)<select...(\\s+value=\"___\")...>(.+?)</select>");
 	protected static final Pattern REGEX_CHECKED_INPUT = regexHTML(
 			"(?is)<input...type=\"checkbox\"...(\\s+value=\"(S___|N___|)\")...>");
+	private static Pattern REGEX_CURRENT_URI = regexHTML("\"CURRENT_URI@(___)\"");
 
 	/**
 	 * Override this method to define a custom finder for alternative WEB
@@ -55,6 +56,14 @@ public class WebGenService extends Service {
 				return WebGenService.class.getResourceAsStream(resourceName);
 			}
 		};
+	}
+
+	/**
+	 * Override this method to translate current URI according to the given
+	 * parameter (e.g. language parameter).
+	 */
+	protected String translateCurrentURI(String currentURI, String parameter) {
+		return currentURI;
 	}
 
 	/**
@@ -86,8 +95,16 @@ public class WebGenService extends Service {
 					.entity(resultPage("Modelo da página \"" + page + "\" não localizado.", rootPath)).type(HTML)
 					.build();
 		foundWebArtifact(webArtifact, page);
+		applyCurrentURITranslation(webArtifact);
 		return Response.ok(content(webArtifact, entity, rootPath, request, getUserPrincipal(), fields)).type(HTML)
 				.encoding(Config.getEncoding()).build();
+	}
+
+	protected void applyCurrentURITranslation(WebArtifact webArtifact) {
+		Matcher matcher = REGEX_CURRENT_URI.matcher(webArtifact.getContent());
+		while (matcher.find())
+			webArtifact.setContent(webArtifact.getContent().replace(matcher.group(),
+					"\"" + translateCurrentURI(getCurrentURI(), matcher.group(1)) + "\""));
 	}
 
 	protected WebArtifact getWebArtifact(String page, Object entity, String... xmlData) {

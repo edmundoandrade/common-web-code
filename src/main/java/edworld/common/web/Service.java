@@ -326,4 +326,11 @@ public abstract class Service {
 		String result = parts[parts.length - 1];
 		return result.isEmpty() ? "" : result + "/";
 	}
+
+	protected String getCurrentURI() {
+		String uri = getRequest().getRequestURI();
+		if (getRequest().getQueryString() != null)
+			uri += "?" + getRequest().getQueryString();
+		return uri;
+	}
 }
