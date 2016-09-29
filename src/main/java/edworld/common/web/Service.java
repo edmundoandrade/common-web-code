@@ -212,7 +212,7 @@ public abstract class Service {
 		String html = "<html>";
 		html += "<ul>";
 		for (String message : messages)
-			html += "<li>" + message + "</li>";
+			html += "<li>" + HTMLUtil.escapeHTML(message) + "</li>";
 		html += "</ul>";
 		html += LINK_HISTORY_BACK;
 		html += "</html>";
