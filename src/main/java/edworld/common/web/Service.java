@@ -1,7 +1,7 @@
 package edworld.common.web;
 
-import static edworld.common.infra.util.DataUtil.parseData;
-import static edworld.common.infra.util.DataUtil.parseTimeStamp;
+import static edworld.common.infra.util.DateUtil.parseDate;
+import static edworld.common.infra.util.DateUtil.parseTimeStamp;
 
 import java.io.ByteArrayOutputStream;
 import java.io.File;
@@ -11,7 +11,6 @@ import java.math.BigDecimal;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.security.Principal;
-import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.List;
 import java.util.regex.Matcher;
@@ -35,6 +34,7 @@ import edworld.common.infra.Config;
 import edworld.common.infra.boundary.TimestampCalendar;
 import edworld.common.infra.repo.PersistenceManager;
 import edworld.common.infra.util.HTMLUtil;
+import edworld.common.infra.util.TextUtil;
 import edworld.common.web.infra.UserInfo;
 import edworld.common.web.infra.WebUtil;
 
@@ -156,46 +156,43 @@ public abstract class Service {
 	}
 
 	protected String chk(String parameter) {
-		return hasContent(parameter) ? parameter.trim() : null;
+		return TextUtil.chk(parameter);
 	}
 
 	protected String[] chk(String[] parameter) {
-		if (hasContent(parameter)) {
-			List<String> result = new ArrayList<>();
-			for (String item : parameter)
-				if (hasContent(item))
-					result.add(item);
-			return result.toArray(new String[result.size()]);
-		}
-		return null;
+		return TextUtil.chk(parameter);
 	}
 
 	protected Integer chkInt(String parameter) {
-		return hasContent(parameter) ? Integer.parseInt(parameter.trim()) : null;
+		return TextUtil.chkInt(parameter);
 	}
 
 	protected BigDecimal chkDec(String parameter) {
-		return hasContent(parameter) ? new BigDecimal(parameter.trim().replace(".", "").replace(",", ".")) : null;
+		return TextUtil.chkDec(parameter, getThousandSeparator(), getDecimalSeparator());
 	}
 
 	protected Double chkDbl(String parameter) {
-		return hasContent(parameter) ? Double.parseDouble(parameter.trim().replace(".", "").replace(",", ".")) : null;
+		return TextUtil.chkDbl(parameter, getThousandSeparator(), getDecimalSeparator());
 	}
 
 	protected Boolean chkBool(String parameter, Boolean valorDefault) {
-		return hasContent(parameter) ? Boolean.parseBoolean(parameter.trim()) : valorDefault;
+		return TextUtil.chkBool(parameter, valorDefault);
 	}
 
 	protected boolean hasContent(String parameter) {
-		return parameter != null && !parameter.trim().isEmpty() && !parameter.trim().equals("(null)");
+		return TextUtil.hasContent(parameter);
 	}
 
 	protected boolean hasContent(String[] parameter) {
-		if (parameter != null)
-			for (String item : parameter)
-				if (hasContent(item))
-					return true;
-		return false;
+		return TextUtil.hasContent(parameter);
+	}
+
+	protected String getThousandSeparator() {
+		return ".";
+	}
+
+	protected String getDecimalSeparator() {
+		return ",";
 	}
 
 	protected Principal getUserPrincipal() {
@@ -250,7 +247,7 @@ public abstract class Service {
 	protected Calendar toCalendar(String date) {
 		if (!hasContent(date))
 			return null;
-		return parseData(date);
+		return parseDate(date);
 	}
 
 	protected TimestampCalendar toTimestamp(String timeStamp) {
