@@ -5,7 +5,7 @@ import static edworld.common.infra.util.HTMLUtil.escapeHTML;
 import static edworld.common.infra.util.RegexUtil.listarOcorrencias;
 import static edworld.common.infra.util.RegexUtil.regexHTML;
 import static edworld.common.infra.util.TextUtil.LINE_BREAK;
-import static edworld.common.infra.util.TextUtil.formatar;
+import static edworld.common.infra.util.TextUtil.format;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -194,7 +194,7 @@ public class WebGenService extends Service {
 				} catch (NullPointerException e) {
 					attribute = null;
 				}
-				result = formatar(attribute);
+				result = format(attribute);
 			} catch (Exception e) {
 				throw new IllegalArgumentException(e);
 			}
@@ -232,7 +232,7 @@ public class WebGenService extends Service {
 						html.substring(0, matcher.start(1))
 								+ html.substring(matcher.end(1), matcher.start(2)) + matcher.group(2)
 										.replace(matcher.group(1).trim(), matcher.group(1).trim() + " selected")
-								+ html.substring(matcher.end(2)));
+						+ html.substring(matcher.end(2)));
 		return html;
 	}
 
