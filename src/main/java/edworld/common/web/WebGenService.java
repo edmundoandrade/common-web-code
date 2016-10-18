@@ -1,6 +1,6 @@
 package edworld.common.web;
 
-import static edworld.common.infra.RecursoXML.elementoXML;
+import static edworld.common.infra.ResourceXML.xmlElement;
 import static edworld.common.infra.util.HTMLUtil.escapeHTML;
 import static edworld.common.infra.util.RegexUtil.listarOcorrencias;
 import static edworld.common.infra.util.RegexUtil.regexHTML;
@@ -221,7 +221,7 @@ public class WebGenService extends Service {
 	}
 
 	public String solveOptionSeparator(String html) {
-		return html.replace(elementoXML("option", ITEM_SEPARATOR), HTML_OPTION_SEPARATOR);
+		return html.replace(xmlElement("option", ITEM_SEPARATOR), HTML_OPTION_SEPARATOR);
 	}
 
 	public String solveSelectedOption(String html) {
@@ -232,7 +232,7 @@ public class WebGenService extends Service {
 						html.substring(0, matcher.start(1))
 								+ html.substring(matcher.end(1), matcher.start(2)) + matcher.group(2)
 										.replace(matcher.group(1).trim(), matcher.group(1).trim() + " selected")
-						+ html.substring(matcher.end(2)));
+								+ html.substring(matcher.end(2)));
 		return html;
 	}
 
