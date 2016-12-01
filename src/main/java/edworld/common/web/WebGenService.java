@@ -9,8 +9,10 @@ import static edworld.common.infra.util.TextUtil.format;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.net.URL;
 import java.security.Principal;
 import java.util.ArrayList;
+import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -25,7 +27,7 @@ import org.apache.commons.beanutils.PropertyUtilsBean;
 import org.apache.commons.io.IOUtils;
 
 import edworld.common.core.Link;
-import edworld.common.core.entity.EntidadeVersionada;
+import edworld.common.core.entity.VersionedEntity;
 import edworld.common.infra.Config;
 import edworld.common.infra.util.HTMLUtil;
 import edworld.webgen.WebArtifact;
@@ -53,7 +55,19 @@ public class WebGenService extends Service {
 		return new WebTemplateFinder(null) {
 			@Override
 			protected InputStream streamFromResourceName(String resourceName) {
-				return WebGenService.class.getResourceAsStream(resourceName);
+				try {
+					URL libURL = null;
+					for (Enumeration<URL> urls = WebGenService.class.getClassLoader().getResources(resourceName); urls
+							.hasMoreElements();) {
+						URL url = urls.nextElement();
+						if (!url.toString().contains("/lib/"))
+							return url.openStream();
+						libURL = url;
+					}
+					return libURL == null ? null : libURL.openStream();
+				} catch (IOException e) {
+					throw new IllegalArgumentException(e);
+				}
 			}
 		};
 	}
@@ -182,7 +196,7 @@ public class WebGenService extends Service {
 		boolean escapeMarkup = (!field.endsWith("_link") && !field.endsWith("_selecionada")
 				&& !field.endsWith(DISPLAY_HTML));
 		String property = field.replace(DISPLAY_HTML, "");
-		if (entity != null && entity instanceof EntidadeVersionada)
+		if (entity != null && entity instanceof VersionedEntity)
 			try {
 				Object attribute;
 				try {
