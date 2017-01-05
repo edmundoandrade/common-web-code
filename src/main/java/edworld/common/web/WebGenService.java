@@ -62,7 +62,8 @@ public class WebGenService extends Service {
 						URL url = urls.nextElement();
 						if (!url.toString().contains("/lib/"))
 							return url.openStream();
-						libURL = url;
+						if (libURL == null || !url.toString().contains("/lib/webgen"))
+							libURL = url;
 					}
 					return libURL == null ? null : libURL.openStream();
 				} catch (IOException e) {
