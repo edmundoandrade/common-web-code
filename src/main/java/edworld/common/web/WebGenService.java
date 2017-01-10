@@ -163,8 +163,11 @@ public class WebGenService extends Service {
 		Map<String, String> parameters = prepareParameters(request);
 		String html = HTMLUtil.fillRootPath(webArtifact.getContent(), rootPath);
 		html = html.replace("${login}", principal.getName());
-		for (String field : listarOcorrencias(regexHTML("\\[\\[(.*?(\\[\\d+\\])?)\\]\\]"), html))
+		for (String field : listarOcorrencias(regexHTML("\\[\\[(.*?(\\[\\d+\\])?)\\]\\]"), html)) {
+			html = html.replace("\"[[" + field + "]]\"",
+					"\"" + escapeHTML(entityAttribute(entity, field.replace("\"", ""), parameters, fields)) + "\"");
 			html = html.replace("[[" + field + "]]", entityAttribute(entity, field, parameters, fields));
+		}
 		html = solveOptionSeparator(html);
 		html = solveSelectedOption(html);
 		return solveCheckedInput(html);

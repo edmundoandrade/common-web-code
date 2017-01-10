@@ -12,11 +12,11 @@ $('#${id}').change(function() {
   if (lastIndex >= 0) {
     filename = filename.substring(lastIndex + 1);
   }
-  $('#nome_${id}').val(filename);
+  $('#name_${id}').val(filename);
 });
 </script>
 </div>
 <div class="${grid}">
-	<label for="nome_${id}">${title}</label>
-	<input type="text" class="form-control" id="nome_${id}" name="nome_${id}" value="[[nome_${id}]]">
+	<label for="name_${id}">${title}</label>
+	<input type="text" class="form-control" id="name_${id}" name="name_${id}" value="[[name_${id}]]">
 </div>
