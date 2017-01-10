@@ -38,7 +38,7 @@
 		<dependency>
 			<groupId>edworld</groupId>
 			<artifactId>common-code</artifactId>
-			<version>3.3</version>
+			<version>3.4</version>
 		</dependency>
 		<dependency>
 			<groupId>edworld</groupId>
