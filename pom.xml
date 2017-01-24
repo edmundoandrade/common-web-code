@@ -3,7 +3,7 @@
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>edworld</groupId>
 	<artifactId>common-web-code</artifactId>
-	<version>3.4</version>
+	<version>3.5</version>
 	<name>Common WEB code</name>
 	<properties>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
@@ -38,7 +38,7 @@
 		<dependency>
 			<groupId>edworld</groupId>
 			<artifactId>common-code</artifactId>
-			<version>3.4</version>
+			<version>3.5</version>
 		</dependency>
 		<dependency>
 			<groupId>edworld</groupId>
