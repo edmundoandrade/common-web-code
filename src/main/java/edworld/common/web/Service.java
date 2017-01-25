@@ -49,6 +49,7 @@ public abstract class Service {
 	public static final String HTML = MediaType.TEXT_HTML + CHARSET_CONFIG;
 	public static final String PLAIN = MediaType.TEXT_PLAIN + CHARSET_CONFIG;
 	public static final String CSS = "text/css" + CHARSET_CONFIG;
+	public static final String JS = "application/javascript" + CHARSET_CONFIG;
 	public static final String IMAGE = "image/*";
 	protected static final String MULTIPART_FORM_DATA = MediaType.MULTIPART_FORM_DATA;
 	protected static final String APPLICATION_OCTET_STREAM = MediaType.APPLICATION_OCTET_STREAM;
