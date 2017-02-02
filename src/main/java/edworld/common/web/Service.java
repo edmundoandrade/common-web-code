@@ -16,8 +16,6 @@ import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import javax.persistence.EntityManager;
-import javax.persistence.PersistenceContext;
 import javax.servlet.ServletContext;
 import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.core.Context;
@@ -32,7 +30,6 @@ import org.apache.commons.io.IOUtils;
 
 import edworld.common.infra.Config;
 import edworld.common.infra.boundary.TimestampCalendar;
-import edworld.common.infra.repo.PersistenceManager;
 import edworld.common.infra.util.HTMLUtil;
 import edworld.common.infra.util.TextUtil;
 import edworld.common.web.infra.UserInfo;
@@ -55,13 +52,10 @@ public abstract class Service {
 	protected static final String APPLICATION_OCTET_STREAM = MediaType.APPLICATION_OCTET_STREAM;
 	protected static final String LINK_HISTORY_BACK = "<p><a href=\"javascript:window.history.back()\">Voltar</a></p>";
 	protected static final Pattern WEB_PATH_DELIMITER = Pattern.compile("/");
-	@PersistenceContext(unitName = "main")
-	protected EntityManager entityManager;
 	@Context
 	protected HttpServletRequest request;
 	@Context
 	private ServletContext servletContext;
-	private PersistenceManager persistenceManager;
 	private Principal userPrincipal;
 
 	public static URI getURI(String uri, String... queryParameters) {
@@ -131,12 +125,6 @@ public abstract class Service {
 
 	protected HttpServletRequest getRequest() {
 		return request;
-	}
-
-	protected PersistenceManager getPersistenceManager() {
-		if (persistenceManager == null)
-			persistenceManager = new PersistenceManager(entityManager);
-		return persistenceManager;
 	}
 
 	protected UserInfo getUserInfo() {
