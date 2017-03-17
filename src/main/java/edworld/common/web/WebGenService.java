@@ -221,6 +221,10 @@ public class WebGenService extends Service {
 		return escapeMarkup ? escapeHTML(result) : result;
 	}
 
+	protected String inPlace(String fieldName, String defaultValue) {
+		return fieldName.equalsIgnoreCase(getParameter("name")) ? getParameter("value") : defaultValue;
+	}
+
 	public String solveField(String field) {
 		if (field.equals("n") || field.startsWith("n_"))
 			return "id";
