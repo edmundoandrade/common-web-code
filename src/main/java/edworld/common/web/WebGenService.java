@@ -26,7 +26,6 @@ import javax.ws.rs.core.Response;
 import org.apache.commons.beanutils.PropertyUtilsBean;
 import org.apache.commons.io.IOUtils;
 
-import edworld.common.core.Link;
 import edworld.common.core.entity.VersionedEntity;
 import edworld.common.infra.Config;
 import edworld.common.infra.util.HTMLUtil;
@@ -164,9 +163,15 @@ public class WebGenService extends Service {
 		String html = HTMLUtil.fillRootPath(webArtifact.getContent(), rootPath);
 		html = html.replace("${login}", principal.getName());
 		for (String field : listarOcorrencias(regexHTML("\\[\\[(.*?(\\[\\d+\\])?)\\]\\]"), html)) {
-			html = html.replace("\"[[" + field + "]]\"",
-					"\"" + escapeHTML(entityAttribute(entity, field.replace("\"", ""), parameters, fields)) + "\"");
-			html = html.replace("[[" + field + "]]", entityAttribute(entity, field, parameters, fields));
+			String info = entityAttribute(entity, field, parameters, fields);
+			boolean escapeMarkup = (!field.endsWith("_link") && !field.endsWith("_selecionada")
+					&& !field.endsWith(DISPLAY_HTML)) && !info.startsWith("<");
+			if (escapeMarkup)
+				html = html.replace("[[" + field + "]]", escapeHTML(info));
+			else {
+				html = html.replace("\"[[" + field + "]]\"", "\"" + escapeHTML(info) + "\"");
+				html = html.replace("[[" + field + "]]", info);
+			}
 		}
 		html = solveOptionSeparator(html);
 		html = solveSelectedOption(html);
@@ -197,16 +202,12 @@ public class WebGenService extends Service {
 		if (fields != null && fields.containsKey(field))
 			return fields.get(field);
 		String result = "";
-		boolean escapeMarkup = (!field.endsWith("_link") && !field.endsWith("_selecionada")
-				&& !field.endsWith(DISPLAY_HTML));
 		String property = field.replace(DISPLAY_HTML, "");
 		if (entity != null && entity instanceof VersionedEntity)
 			try {
 				Object attribute;
 				try {
 					attribute = new PropertyUtilsBean().getProperty(entity, solveField(property));
-					if (attribute instanceof Link)
-						escapeMarkup = false;
 				} catch (ArrayIndexOutOfBoundsException e) {
 					attribute = null;
 				} catch (NullPointerException e) {
@@ -218,7 +219,7 @@ public class WebGenService extends Service {
 			}
 		else if (parameters.containsKey(property) && !parameters.get(property).isEmpty())
 			result = parameters.get(property);
-		return escapeMarkup ? escapeHTML(result) : result;
+		return result;
 	}
 
 	protected String inPlace(String fieldName, String defaultValue) {
