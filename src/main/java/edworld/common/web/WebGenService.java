@@ -2,11 +2,12 @@ package edworld.common.web;
 
 import static edworld.common.infra.ResourceXML.xmlElement;
 import static edworld.common.infra.util.HTMLUtil.escapeHTML;
-import static edworld.common.infra.util.RegexUtil.listarOcorrencias;
+import static edworld.common.infra.util.RegexUtil.listOccurrences;
 import static edworld.common.infra.util.RegexUtil.regexHTML;
 import static edworld.common.infra.util.TextUtil.LINE_BREAK;
 import static edworld.common.infra.util.TextUtil.format;
 
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URL;
@@ -47,11 +48,19 @@ public class WebGenService extends Service {
 	private static Pattern REGEX_CURRENT_URI = regexHTML("\"CURRENT_URI@(___)\"");
 
 	/**
+	 * Override this method to define a directory for custom WEB component
+	 * templates.
+	 */
+	protected File getTemplatesDir() {
+		return null;
+	}
+
+	/**
 	 * Override this method to define a custom finder for alternative WEB
 	 * component templates.
 	 */
 	protected WebTemplateFinder getTemplateFinder() {
-		return new WebTemplateFinder(null) {
+		return new WebTemplateFinder(getTemplatesDir()) {
 			@Override
 			protected InputStream streamFromResourceName(String resourceName) {
 				try {
@@ -162,7 +171,7 @@ public class WebGenService extends Service {
 		Map<String, String> parameters = prepareParameters(request);
 		String html = HTMLUtil.fillRootPath(webArtifact.getContent(), rootPath);
 		html = html.replace("${login}", principal.getName());
-		for (String field : listarOcorrencias(regexHTML("\\[\\[(.*?(\\[\\d+\\])?)\\]\\]"), html)) {
+		for (String field : listOccurrences(regexHTML("\\[\\[(.*?(\\[\\d+\\])?)\\]\\]"), html)) {
 			String info = entityAttribute(entity, field, parameters, fields);
 			boolean escapeMarkup = (!field.endsWith("_link") && !field.endsWith("_selecionada")
 					&& !field.endsWith(DISPLAY_HTML)) && !info.startsWith("<");
