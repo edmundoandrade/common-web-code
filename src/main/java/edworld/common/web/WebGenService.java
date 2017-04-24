@@ -226,7 +226,11 @@ public class WebGenService extends Service {
 			} catch (Exception e) {
 				throw new IllegalArgumentException(e);
 			}
-		else if (parameters.containsKey(property) && !parameters.get(property).isEmpty())
+		else if (entity != null && entity instanceof Map<?, ?>) {
+			Map<?, ?> entityMap = (Map<?, ?>) entity;
+			if (entityMap.containsKey(property) && !entityMap.get(property).toString().isEmpty())
+				result = entityMap.get(property).toString();
+		} else if (parameters.containsKey(property) && !parameters.get(property).isEmpty())
 			result = parameters.get(property);
 		return result;
 	}
