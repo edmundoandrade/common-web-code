@@ -3,7 +3,7 @@
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>edworld</groupId>
 	<artifactId>common-web-code</artifactId>
-	<version>3.9</version>
+	<version>3.9.1</version>
 	<name>Common WEB code</name>
 	<properties>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
@@ -38,7 +38,7 @@
 		<dependency>
 			<groupId>edworld</groupId>
 			<artifactId>common-code</artifactId>
-			<version>3.9</version>
+			<version>3.9.1</version>
 		</dependency>
 		<dependency>
 			<groupId>edworld</groupId>
@@ -58,14 +58,12 @@
 		<dependency>
 			<groupId>org.jboss.resteasy</groupId>
 			<artifactId>resteasy-jaxrs</artifactId>
-			<version>3.0.14.Final</version>
-			<scope>provided</scope><!-- Standard component of Wildfly web server -->
+			<version>3.0.24.Final</version>
 		</dependency>
 		<dependency>
 			<groupId>org.jboss.resteasy</groupId>
 			<artifactId>resteasy-multipart-provider</artifactId>
-			<version>3.0.14.Final</version>
-			<scope>provided</scope><!-- Standard component of Wildfly web server -->
+			<version>3.0.24.Final</version>
 		</dependency>
 		<dependency>
 			<groupId>junit</groupId>
