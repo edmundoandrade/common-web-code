@@ -33,7 +33,6 @@ public class CASAuthenticationFilter extends AuthenticationFilter {
 								pool.get("java.lang.String"), pool.get("boolean") });
 				method.insertAfter("return edworld.common.web.CASAuthenticationFilter.transformServiceURL($_);");
 				customClass.toClass();
-				System.out.println("Method instrumented: " + customClass.getSimpleName() + "." + method.getName());
 			}
 		} catch (Exception e) {
 			throw new IllegalArgumentException(e);
@@ -44,8 +43,6 @@ public class CASAuthenticationFilter extends AuthenticationFilter {
 	private static Optional<String> extraPath;
 
 	public static String transformServiceURL(String serviceURL) {
-		System.out.println("serverName: " + serverName);
-		System.out.println("tranforming... " + serviceURL);
 		if (serverName.isPresent() && extraPath.isPresent() && serviceURL.contains(extraPath.get())
 				&& !serviceURL.contains(serverName.get()))
 			return serverName.get() + serviceURL.substring(serviceURL.indexOf(extraPath.get()));
