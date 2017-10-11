@@ -43,10 +43,14 @@ public class CASAuthenticationFilter extends AuthenticationFilter {
 	private static Optional<String> extraPath;
 
 	public static String transformServiceURL(String serviceURL) {
-		if (serverName.isPresent() && extraPath.isPresent() && serviceURL.contains(extraPath.get())
-				&& !serviceURL.contains(serverName.get()))
-			return serverName.get() + serviceURL.substring(serviceURL.indexOf(extraPath.get()));
+		if (extraPath.isPresent() && !serviceURL.contains(extraPath.get()))
+			return serverName.get() + "/" + detectExtraPath(serviceURL).get();
 		return serviceURL;
+	}
+
+	public static Optional<String> detectExtraPath(String url) {
+		String[] urlParts = url.replaceFirst("//", "||").split("/", 2);
+		return urlParts.length < 2 || urlParts[1].isEmpty() ? Optional.empty() : Optional.of(urlParts[1]);
 	}
 
 	@Override
@@ -54,10 +58,5 @@ public class CASAuthenticationFilter extends AuthenticationFilter {
 		super.initInternal(filterConfig);
 		serverName = Optional.of(getString(ConfigurationKeys.SERVER_NAME));
 		extraPath = detectExtraPath(serverName.get());
-	}
-
-	protected Optional<String> detectExtraPath(String serverName) {
-		String[] urlParts = serverName.replaceFirst("//", "||").split("/", 2);
-		return urlParts.length < 2 || urlParts[1].isEmpty() ? Optional.empty() : Optional.of("/" + urlParts[1] + "/");
 	}
 }
